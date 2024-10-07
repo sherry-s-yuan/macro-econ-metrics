@@ -4,7 +4,7 @@ from datetime import datetime
 import pandas as pd
 from db_util import run_sql_command, connect_to_postgres
 
-TICKER_TO_TRACK = ["QQQ", "^GSPC"]
+TICKER_TO_TRACK = ["QQQ", "SPY"]
 COLUMNS_TO_KEEP = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Dividends', 'Stock Splits']
 DEBUG=0
 # Store the newest stock data for `ticker`
