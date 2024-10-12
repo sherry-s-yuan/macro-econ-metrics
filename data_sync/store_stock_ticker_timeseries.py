@@ -4,7 +4,13 @@ from datetime import datetime
 import pandas as pd
 from db_util import run_sql_command, connect_to_postgres
 
-TICKER_TO_TRACK = ["QQQ", "SPY"]
+TICKER_TO_TRACK = [
+    "QQQ", # Technology
+    "SPY", # Technology + others
+    "TLT", # Bonds
+    "GLD", # Gold
+    "XLE", # Oil & Energy
+]
 COLUMNS_TO_KEEP = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Dividends', 'Stock Splits']
 DEBUG=0
 # Store the newest stock data for `ticker`
@@ -12,7 +18,7 @@ def store_ticker_historical_data(ticker: str):
     connection = connect_to_postgres()
     if connection is None:
         return
-    run_sql_command(connection, "data_sync/sql/create_table.sql")
+    run_sql_command(connection, "data_sync/sql/create_stock_table.sql")
     latest_data_date = get_latest_date(connection, ticker)
     if DEBUG:
         print("latest_data_date")
