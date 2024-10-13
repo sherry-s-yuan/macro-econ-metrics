@@ -1,7 +1,7 @@
 # Stores historical macro economics metric timeseries in postgres DB.
 from fredapi import Fred
 import pandas as pd
-from db_util import run_sql_command, connect_to_postgres
+from util.db_util import run_sql_command, connect_to_postgres
 
 API_KEY="8805f58d4d02b992a731e925ef01cd8e"
 SERIES_TO_TRACK = [
