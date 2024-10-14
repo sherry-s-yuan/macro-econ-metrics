@@ -2,15 +2,9 @@
 import yfinance as yf
 from datetime import datetime
 import pandas as pd
-from db_util import run_sql_command, connect_to_postgres
+from util.db_util import run_sql_command, connect_to_postgres
+from consts import TICKER_TO_TRACK
 
-TICKER_TO_TRACK = [
-    "QQQ", # Technology
-    "SPY", # Technology + others
-    "TLT", # Bonds
-    "GLD", # Gold
-    "XLE", # Oil & Energy
-]
 COLUMNS_TO_KEEP = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Dividends', 'Stock Splits']
 DEBUG=0
 # Store the newest stock data for `ticker`

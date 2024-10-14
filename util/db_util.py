@@ -1,8 +1,5 @@
 import psycopg2
-
-DB_NAME = "macro_econ_metrics"
-TICKER_TIMESERIES_TABLE_NAME = "stock_ticker_timeseries"
-FRED_TIMESERIES_TABLE_NAME = "fred_series_timeseries"
+from consts import DB_NAME
 
 def run_sql_command(connection, fn: str):
     try:

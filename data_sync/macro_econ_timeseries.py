@@ -2,23 +2,10 @@
 from fredapi import Fred
 import pandas as pd
 from util.db_util import run_sql_command, connect_to_postgres
+from consts import SERIES_TO_TRACK
+
 
 API_KEY="8805f58d4d02b992a731e925ef01cd8e"
-SERIES_TO_TRACK = [
-    "UMCSENT", # consumer confidence index
-    "MSPUS", # home sales
-    "M2REAL", # money supply
-    "IRLTLT01USM156N", # bond interest rate
-    "MORTGAGE30US", # mortgage interest rate
-    "DEXUSEU", # US->Euro exchange rates
-    "DEXJPUS", # Us->Japan exchange rates
-    "DEXCHUS", # Us->China exchange rates
-    "DEXSIUS", # Us->Singapore exchange rates
-    "PPIACO", # All commodities
-    "WPU10", # metal commodities
-    "WPS012", # grains commodities
-    "DCOILWTICO", # oil commodities
-]
 COLUMNS_TO_KEEP = ['date', 'value']
 DEBUG=1
 
@@ -46,17 +33,19 @@ def store_macro_econ_historical_data(series: str):
     historical_data["date"] = historical_data["date"].dt.floor("d")
     historical_data["date"] = historical_data["date"].dt.date
     historical_data = historical_data.drop_duplicates(subset = 'date', keep='last')
+    historical_data = interpolate_historical_data(historical_data)
     historical_data["series"] = series
     if DEBUG:
         print("latest_new_data_date")
         print(historical_data["date"].max())
+    if DEBUG:
+        historical_data.to_csv(f"sample_data_{series}.csv")
     # Remove dates that have overlap with what's already been stored
     historical_data = historical_data[~(historical_data['date'] <= latest_data_date)]
     if historical_data.empty:
         print("Data is already up to date")
         return
-    if DEBUG:
-        historical_data.to_csv("sample_data.csv")
+
     new_db_records = historical_data.to_dict(orient = "records")
     if new_db_records:
         insert_data_into_table(connection, new_db_records)
@@ -69,7 +58,22 @@ def validate_and_sanitize_historical_data(historical_data):
             if col in ['value']:
                 raise Exception("Invalid historical data without basic values")
     return historical_data[COLUMNS_TO_KEEP]
-                
+
+def interpolate_historical_data(historical_data):
+    date_range = pd.date_range(start=historical_data['date'].min(), end=historical_data['date'].max())
+    historical_data = historical_data.set_index('date').reindex(date_range)
+    historical_data['value'] = historical_data['value'].infer_objects(copy=False).interpolate()
+    historical_data = historical_data.reset_index()
+    historical_data.rename(columns={'index': 'date'}, inplace=True)
+    # Constraint to business days
+    business_days = pd.bdate_range(start=historical_data['date'].min(), end=historical_data['date'].max())
+    historical_data = historical_data.set_index('date').reindex(business_days).reset_index().rename(columns={'index': 'date'})
+    historical_data["date"] = pd.to_datetime(historical_data["date"])
+    historical_data["date"] = historical_data["date"].dt.floor("d")
+    historical_data["date"] = historical_data["date"].dt.date
+
+    # historical_data = historical_data[historical_data['date'].isin(business_days)]
+    return historical_data
 
 def get_latest_date(connection, series):
     """Get the latest date for a given ticker, None if no date exist."""
@@ -104,3 +108,4 @@ def insert_data_into_table(connection, data_list):
 if __name__ == '__main__':
     for series in SERIES_TO_TRACK:
         store_macro_econ_historical_data(series)
+        # break
